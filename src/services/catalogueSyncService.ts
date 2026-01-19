@@ -1,6 +1,5 @@
 // src/services/catalogueSyncService.ts
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import firestore from '@react-native-firebase/firestore';
 import { getCatalogueById } from '../data/catalogueRegistry';
 
 /**
@@ -12,10 +11,10 @@ export const syncCatalogueToFirestore = async (catalogueId: string): Promise<voi
     console.log(`🔄 Syncing catalogue ${catalogueId} to Firestore...`);
 
     // Check if catalogue already exists in Firestore
-    const catalogueRef = doc(db, 'catalogues', catalogueId);
-    const catalogueDoc = await getDoc(catalogueRef);
+    const catalogueRef = firestore().collection('catalogues').doc(catalogueId);
+    const catalogueDoc = await catalogueRef.get();
 
-    if (catalogueDoc.exists()) {
+    if (catalogueDoc.exists) {
       console.log('✅ Catalogue already exists in Firestore');
       return;
     }
@@ -40,12 +39,12 @@ export const syncCatalogueToFirestore = async (catalogueId: string): Promise<voi
       pdfUrl: localCatalogue.pdfUrl || null,
       pageCount: localCatalogue.pages?.length || 0,
       isActive: new Date(localCatalogue.endDate) >= new Date(),
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: firestore.FieldValue.serverTimestamp(),
+      updatedAt: firestore.FieldValue.serverTimestamp(),
     };
 
     // Write to Firestore
-    await setDoc(catalogueRef, catalogueData);
+    await catalogueRef.set(catalogueData);
 
     console.log('✅ Catalogue synced to Firestore successfully');
   } catch (error) {
@@ -85,9 +84,9 @@ export const syncAllCataloguesToFirestore = async (): Promise<void> => {
  */
 export const checkCatalogueExists = async (catalogueId: string): Promise<boolean> => {
   try {
-    const catalogueRef = doc(db, 'catalogues', catalogueId);
-    const catalogueDoc = await getDoc(catalogueRef);
-    return catalogueDoc.exists();
+    const catalogueRef = firestore().collection('catalogues').doc(catalogueId);
+    const catalogueDoc = await catalogueRef.get();
+    return catalogueDoc.exists;
   } catch (error) {
     console.error('Error checking catalogue:', error);
     return false;

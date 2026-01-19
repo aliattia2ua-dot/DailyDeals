@@ -1,6 +1,6 @@
 // src/store/slices/authSlice.ts - FIXED WITH PROPER LOCATION RESTORATION
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { onAuthStateChanged } from 'firebase/auth';
+import auth from '@react-native-firebase/auth';
 import type { AuthState, UserProfile } from '../../types';
 import {
   signInWithGoogleToken,
@@ -11,7 +11,6 @@ import { getAllUserData, syncAllUserData } from '../../services/userDataService'
 import { hydrateFavorites } from './favoritesSlice';
 import { hydrateBasket } from './basketSlice';
 import { hydrateLocation, resetFirestoreLocationFlag } from './settingsSlice';
-import { getAuthInstance } from '../../config/firebase';
 import type { RootState } from '../index';
 
 const initialState: AuthState = {
@@ -35,10 +34,9 @@ export const checkAuthState = createAsyncThunk(
   async (_, { dispatch, rejectWithValue }) => {
     try {
       console.log('🔍 [authSlice] Checking authentication state...');
-      const auth = getAuthInstance();
 
       return new Promise<UserProfile | null>((resolve) => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
           unsubscribe();
 
           if (firebaseUser) {

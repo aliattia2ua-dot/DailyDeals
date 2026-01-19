@@ -1,12 +1,5 @@
 // src/services/userDataService.ts - FIXED WITH PROPER LOCATION SYNC
-import {
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { getDbInstance } from '../config/firebase';
+import firestore from '@react-native-firebase/firestore';
 import { BasketItem, FavoritesState } from '../types';
 
 /**
@@ -17,15 +10,14 @@ export const syncFavoritesToFirestore = async (
   favorites: FavoritesState
 ): Promise<void> => {
   try {
-    const db = getDbInstance();
-    const userRef = doc(db, 'users', uid);
+    const userRef = firestore().collection('users').doc(uid);
 
-    await updateDoc(userRef, {
+    await userRef.update({
       favorites:  {
         subcategoryIds: favorites.subcategoryIds,
         storeIds: favorites.storeIds,
       },
-      updatedAt: serverTimestamp(),
+      updatedAt: firestore.FieldValue.serverTimestamp(),
     });
 
     console.log('✅ [userDataService] Favorites synced to Firestore');
@@ -42,12 +34,11 @@ export const getFavoritesFromFirestore = async (
   uid: string
 ): Promise<FavoritesState | null> => {
   try {
-    const db = getDbInstance();
-    const userRef = doc(db, 'users', uid);
-    const userSnap = await getDoc(userRef);
+    const userRef = firestore().collection('users').doc(uid);
+    const userSnap = await userRef.get();
 
-    if (userSnap.exists() && userSnap. data().favorites) {
-      const data = userSnap. data().favorites;
+    if (userSnap.exists && userSnap.data()?.favorites) {
+      const data = userSnap.data()?.favorites;
       return {
         subcategoryIds: data.subcategoryIds || [],
         storeIds: data.storeIds || [],
@@ -69,12 +60,11 @@ export const syncBasketToFirestore = async (
   basketItems: BasketItem[]
 ): Promise<void> => {
   try {
-    const db = getDbInstance();
-    const userRef = doc(db, 'users', uid);
+    const userRef = firestore().collection('users').doc(uid);
 
-    await updateDoc(userRef, {
+    await userRef.update({
       basket: basketItems,
-      updatedAt: serverTimestamp(),
+      updatedAt: firestore.FieldValue.serverTimestamp(),
     });
 
     console.log('✅ [userDataService] Basket synced to Firestore');
@@ -91,12 +81,11 @@ export const getBasketFromFirestore = async (
   uid: string
 ): Promise<BasketItem[]> => {
   try {
-    const db = getDbInstance();
-    const userRef = doc(db, 'users', uid);
-    const userSnap = await getDoc(userRef);
+    const userRef = firestore().collection('users').doc(uid);
+    const userSnap = await userRef.get();
 
-    if (userSnap.exists() && userSnap.data().basket) {
-      return userSnap.data().basket as BasketItem[];
+    if (userSnap.exists && userSnap.data()?.basket) {
+      return userSnap.data()?.basket as BasketItem[];
     }
 
     return [];
@@ -111,12 +100,11 @@ export const getBasketFromFirestore = async (
  */
 export const clearBasketInFirestore = async (uid: string): Promise<void> => {
   try {
-    const db = getDbInstance();
-    const userRef = doc(db, 'users', uid);
+    const userRef = firestore().collection('users').doc(uid);
 
-    await updateDoc(userRef, {
+    await userRef.update({
       basket: [],
-      updatedAt: serverTimestamp(),
+      updatedAt: firestore.FieldValue.serverTimestamp(),
     });
 
     console.log('✅ [userDataService] Basket cleared in Firestore');
@@ -141,11 +129,10 @@ export const syncLocationToFirestore = async (
   phoneNumber?:  string | null
 ): Promise<void> => {
   try {
-    const db = getDbInstance();
-    const userRef = doc(db, 'users', uid);
+    const userRef = firestore().collection('users').doc(uid);
 
     // Check if document exists
-    const userSnap = await getDoc(userRef);
+    const userSnap = await userRef.get();
 
     const locationData = {
       governorate:  governorate,
@@ -154,7 +141,7 @@ export const syncLocationToFirestore = async (
 
     const updateData: any = {
       location: locationData,
-      updatedAt:  serverTimestamp(),
+      updatedAt:  firestore.FieldValue.serverTimestamp(),
     };
 
     // Only update phone if provided (not undefined)
@@ -162,15 +149,15 @@ export const syncLocationToFirestore = async (
       updateData.phoneNumber = phoneNumber;
     }
 
-    if (userSnap. exists()) {
+    if (userSnap.exists) {
       // Update existing document
-      await updateDoc(userRef, updateData);
+      await userRef.update(updateData);
       console.log('✅ [userDataService] Location updated in Firestore:', locationData);
     } else {
       // Create new document with location
-      await setDoc(userRef, {
+      await userRef.set({
         ... updateData,
-        createdAt: serverTimestamp(),
+        createdAt: firestore.FieldValue.serverTimestamp(),
       });
       console.log('✅ [userDataService] Location created in Firestore:', locationData);
     }
@@ -187,12 +174,11 @@ export const getLocationFromFirestore = async (
   uid: string
 ): Promise<{ governorate:  string | null; city: string | null } | null> => {
   try {
-    const db = getDbInstance();
-    const userRef = doc(db, 'users', uid);
-    const userSnap = await getDoc(userRef);
+    const userRef = firestore().collection('users').doc(uid);
+    const userSnap = await userRef.get();
 
-    if (userSnap.exists() && userSnap.data().location) {
-      const data = userSnap.data().location;
+    if (userSnap.exists && userSnap.data()?.location) {
+      const data = userSnap.data()?.location;
       return {
         governorate:  data.governorate || null,
         city: data.city || null,
@@ -217,12 +203,11 @@ export const updateUserProfile = async (
   }
 ): Promise<void> => {
   try {
-    const db = getDbInstance();
-    const userRef = doc(db, 'users', uid);
+    const userRef = firestore().collection('users').doc(uid);
 
-    await updateDoc(userRef, {
+    await userRef.update({
       ... data,
-      updatedAt: serverTimestamp(),
+      updatedAt: firestore.FieldValue.serverTimestamp(),
     });
 
     console.log('✅ [userDataService] User profile updated in Firestore');

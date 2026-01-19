@@ -1,7 +1,7 @@
 // src/hooks/useAuthStateListener.ts
 import { useEffect } from 'react';
 import { useAppDispatch } from '../store/hooks';
-import { setUser } from '../store/slices/authSlice';
+import { setUser, clearUser } from '../store/slices/authSlice';
 import { onAuthChange } from '../services/authService';
 
 export const useAuthStateListener = () => {
@@ -12,7 +12,11 @@ export const useAuthStateListener = () => {
 
     const unsubscribe = onAuthChange((userProfile) => {
       console.log('🔄 Auth state changed:', userProfile?.email || 'signed out');
-      dispatch(setUser(userProfile));
+      if (userProfile) {
+        dispatch(setUser(userProfile));
+      } else {
+        dispatch(clearUser());
+      }
     });
 
     return () => {

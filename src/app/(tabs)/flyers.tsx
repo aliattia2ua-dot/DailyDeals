@@ -36,7 +36,7 @@ import {
   getCategoryById
 } from '../../data/categories';
 import { formatDateRange } from '../../utils/catalogueUtils';
-import { logScreenView, logSelectContent, logViewItemList } from '../../services/analyticsService';
+import { logScreenView, logSelectContent } from '../../services/analyticsService';
 import { useSafeTabBarHeight, useSmartRefresh } from '../../hooks';
 import { stores, getStoreById, getGovernorateName } from '../../data/stores';
 import type { Catalogue } from '../../types';

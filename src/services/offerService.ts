@@ -1,6 +1,5 @@
 // src/services/offerService.ts - OPTIMIZED WITH BATCHING + FAVORITES SUPPORT
-import { collection, query, where, getDocs, doc, getDoc, limit, orderBy } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import firestore from '@react-native-firebase/firestore';
 import type { CatalogueOffer } from './catalogueOfferService';
 import { getTodayString, normalizeDateString } from '../utils/dateUtils';
 import { cacheService, CACHE_KEYS, CACHE_DURATIONS } from './cacheService';
@@ -37,11 +36,10 @@ export async function getAllOffers(
     async () => {
       console.log(`🔥 Firebase: Fetching ALL offers (limit: ${maxResults})...`);
       // Note: Without orderBy, Firestore will return documents in natural order
-      const q = query(
-        collection(db, 'offers'),
-        limit(maxResults)
-      );
-      const snapshot = await getDocs(q);
+      const snapshot = await firestore()
+        .collection('offers')
+        .limit(maxResults)
+        .get();
       const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OfferWithCatalogue));
 
       console.log(`✅ Fetched ${offers.length} total offers`);
@@ -62,14 +60,13 @@ export async function getActiveOffers(forceRefresh: boolean = false): Promise<Of
       const today = getTodayString();
       console.log(`🔥 Firebase: Fetching active offers for date: ${today} (limit: 100)`);
 
-      const q = query(
-        collection(db, 'offers'),
-        where('catalogueEndDate', '>=', today),
-        orderBy('catalogueEndDate', 'desc'),
-        limit(100)
-      );
+      const snapshot = await firestore()
+        .collection('offers')
+        .where('catalogueEndDate', '>=', today)
+        .orderBy('catalogueEndDate', 'desc')
+        .limit(100)
+        .get();
 
-      const snapshot = await getDocs(q);
       const allOffers = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -107,7 +104,7 @@ export async function getOfferStats(forceRefresh: boolean = false): Promise<{
   console.log('🔥 Firebase: Calculating offer stats...');
   const today = getTodayString();
 
-  const snapshot = await getDocs(collection(db, 'offers'));
+  const snapshot = await firestore().collection('offers').get();
 
   let all = 0;
   let active = 0;
@@ -157,16 +154,13 @@ export async function getOffersForCategories(
   for (let i = 0; i < categoryIds.length; i += 10) {
     const batch = categoryIds.slice(i, i + 10);
 
-    const constraints = [
-      where('categoryId', 'in', batch)
-    ];
+    let q = firestore().collection('offers').where('categoryId', 'in', batch);
 
     if (activeOnly) {
-      constraints.push(where('catalogueEndDate', '>=', today));
+      q = q.where('catalogueEndDate', '>=', today);
     }
 
-    const q = query(collection(db, 'offers'), ...constraints);
-    batches.push(getDocs(q));
+    batches.push(q.get());
   }
 
   const snapshots = await Promise.all(batches);
@@ -201,16 +195,13 @@ export async function getOffersForStores(
   for (let i = 0; i < storeIds.length; i += 10) {
     const batch = storeIds.slice(i, i + 10);
 
-    const constraints = [
-      where('storeId', 'in', batch)
-    ];
+    let q = firestore().collection('offers').where('storeId', 'in', batch);
 
     if (activeOnly) {
-      constraints.push(where('catalogueEndDate', '>=', today));
+      q = q.where('catalogueEndDate', '>=', today);
     }
 
-    const q = query(collection(db, 'offers'), ...constraints);
-    batches.push(getDocs(q));
+    batches.push(q.get());
   }
 
   const snapshots = await Promise.all(batches);
@@ -233,12 +224,11 @@ export async function getOffersForStores(
 export async function getOffersByCatalogue(catalogueId: string): Promise<OfferWithCatalogue[]> {
   console.log(`🔥 Firebase: Fetching offers for catalogue ${catalogueId}`);
 
-  const q = query(
-    collection(db, 'offers'),
-    where('catalogueId', '==', catalogueId)
-  );
+  const snapshot = await firestore()
+    .collection('offers')
+    .where('catalogueId', '==', catalogueId)
+    .get();
 
-  const snapshot = await getDocs(q);
   const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OfferWithCatalogue));
 
   console.log(`✅ Found ${offers.length} offers for catalogue`);
@@ -255,22 +245,20 @@ export async function getOffersByCategory(
   console.log(`🔥 Firebase: category=${categoryId}, activeOnly=${activeOnly}`);
 
   if (!activeOnly) {
-    const q = query(
-      collection(db, 'offers'),
-      where('categoryId', '==', categoryId)
-    );
-    const snapshot = await getDocs(q);
+    const snapshot = await firestore()
+      .collection('offers')
+      .where('categoryId', '==', categoryId)
+      .get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OfferWithCatalogue));
   }
 
   const today = getTodayString();
-  const q = query(
-    collection(db, 'offers'),
-    where('categoryId', '==', categoryId),
-    where('catalogueEndDate', '>=', today)
-  );
+  const snapshot = await firestore()
+    .collection('offers')
+    .where('categoryId', '==', categoryId)
+    .where('catalogueEndDate', '>=', today)
+    .get();
 
-  const snapshot = await getDocs(q);
   const allOffers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OfferWithCatalogue));
 
   const activeOffers = allOffers.filter(offer =>
@@ -291,22 +279,20 @@ export async function getOffersByStore(
   console.log(`🔥 Firebase: store=${storeId}, activeOnly=${activeOnly}`);
 
   if (!activeOnly) {
-    const q = query(
-      collection(db, 'offers'),
-      where('storeId', '==', storeId)
-    );
-    const snapshot = await getDocs(q);
+    const snapshot = await firestore()
+      .collection('offers')
+      .where('storeId', '==', storeId)
+      .get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OfferWithCatalogue));
   }
 
   const today = getTodayString();
-  const q = query(
-    collection(db, 'offers'),
-    where('storeId', '==', storeId),
-    where('catalogueEndDate', '>=', today)
-  );
+  const snapshot = await firestore()
+    .collection('offers')
+    .where('storeId', '==', storeId)
+    .where('catalogueEndDate', '>=', today)
+    .get();
 
-  const snapshot = await getDocs(q);
   const allOffers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OfferWithCatalogue));
 
   const activeOffers = allOffers.filter(offer =>
@@ -323,10 +309,12 @@ export async function getOffersByStore(
 export async function getOfferById(offerId: string): Promise<OfferWithCatalogue | null> {
   console.log(`🔥 Firebase: Fetching offer ${offerId}`);
 
-  const docRef = doc(db, 'offers', offerId);
-  const docSnap = await getDoc(docRef);
+  const docSnap = await firestore()
+    .collection('offers')
+    .doc(offerId)
+    .get();
 
-  if (docSnap.exists()) {
+  if (docSnap.exists) {
     return { id: docSnap.id, ...docSnap.data() } as OfferWithCatalogue;
   }
 
@@ -370,13 +358,11 @@ export async function subcategoryHasOffers(
 ): Promise<boolean> {
   try {
     const today = getTodayString();
-    const q = query(
-      collection(db, 'offers'),
-      where('categoryId', '==', subcategoryId),
-      where('catalogueEndDate', '>=', today)
-    );
-
-    const snapshot = await getDocs(q);
+    const snapshot = await firestore()
+      .collection('offers')
+      .where('categoryId', '==', subcategoryId)
+      .where('catalogueEndDate', '>=', today)
+      .get();
 
     // Check if any offers are actually active (not just in date range)
     const hasActiveOffers = snapshot.docs.some(doc => {

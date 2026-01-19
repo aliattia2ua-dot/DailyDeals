@@ -3,7 +3,9 @@
 // FILE 1: src/utils/firestoreHelpers.ts (NEW FILE)
 // ============================================
 
-import { Timestamp } from 'firebase/firestore';
+import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+
+type Timestamp = FirebaseFirestoreTypes.Timestamp;
 
 /**
  * Convert Firestore Timestamp to ISO string

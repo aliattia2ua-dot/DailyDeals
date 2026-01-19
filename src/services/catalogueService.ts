@@ -1,7 +1,6 @@
 // src/services/catalogueService.ts - CATALOGUE CACHING SERVICE
 import { cacheService, CACHE_KEYS, CACHE_DURATIONS } from './cacheService';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import firestore from '@react-native-firebase/firestore';
 import type { Catalogue } from '../types';
 
 /**
@@ -17,13 +16,11 @@ export async function getAllCatalogues(
     async () => {
       console.log('🔥 Firebase: Fetching all catalogues (limit: 50)...');
       
-      const cataloguesRef = collection(db, 'catalogues');
-      const q = query(
-        cataloguesRef,
-        orderBy('startDate', 'desc'),
-        limit(50)
-      );
-      const snapshot = await getDocs(q);
+      const snapshot = await firestore()
+        .collection('catalogues')
+        .orderBy('startDate', 'desc')
+        .limit(50)
+        .get();
       
       const catalogues: Catalogue[] = snapshot.docs.map(doc => ({
         id: doc.id,

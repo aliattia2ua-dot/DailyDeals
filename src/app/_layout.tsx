@@ -6,6 +6,7 @@ import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { initializeAnalytics } from '../services/analyticsService';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 import store from '../store';
 import { initI18n } from '../i18n';
@@ -35,7 +36,13 @@ export default function RootLayout() {
         await initializeFirebase();
         console.log('✅ Firebase initialized with persistence');
 
+        // Initialize Crashlytics
+        await crashlytics().setCrashlyticsCollectionEnabled(true);
+        console.log('✅ Crashlytics initialized');
 
+        // Initialize Analytics
+        await initializeAnalytics();
+        console.log('✅ Analytics initialized');
 
         // ✅ CRITICAL: Check if user is already logged in
         console.log('🔍 Checking for existing auth session...');

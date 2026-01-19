@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.npm
+.pnpm-store
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# macOS
+.DS_Store
+*.pem
+
+# Local env files
+.env*.local
+.env
+
+# Typescript
+*.tsbuildinfo
+
+# IDEs
+.vscode/
+.idea/
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+/tmp
+
+# Firebase config files (add locally, don't commit)
+# These files contain sensitive API keys and project configuration
+android/app/google-services.json
+ios/**/GoogleService-Info.plist
+
+# Note: These files should be added by each developer locally
+# Download from Firebase Console -> Project Settings -> Your App
