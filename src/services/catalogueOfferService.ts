@@ -183,7 +183,7 @@ export const addCatalogueOffer = async (
       id: docRef.id,
       // Denormalized catalogue data
       storeId: catalogue.storeId,
-      storeName: catalogue. storeName || catalogue.titleAr. replace('عروض ', ''),
+      storeName: catalogue.storeName || catalogue.titleAr.replace('عروض ', ''),
       catalogueTitle: catalogue.titleAr,
       catalogueStartDate: catalogue.startDate,
       catalogueEndDate: catalogue.endDate,
@@ -301,7 +301,7 @@ export const syncOfferToFlatCollection = async (
     if (!catalogueDoc.exists) {
       throw new Error(`Catalogue ${catalogueId} not found`);
     }
-    const catalogue = catalogueDoc. data();
+    const catalogue = catalogueDoc.data();
 
     // Get offer data from subcollection
     const offerDoc = await firestore().collection('catalogues').doc(catalogueId).collection('offers').doc(offerId).get();
@@ -322,10 +322,10 @@ export const syncOfferToFlatCollection = async (
       id: offerId,
       catalogueId,
       storeId: catalogue.storeId,
-      storeName: catalogue. storeName || catalogue.titleAr.replace('عروض ', ''),
+      storeName: catalogue.storeName || catalogue.titleAr.replace('عروض ', ''),
       catalogueTitle: catalogue.titleAr,
       catalogueStartDate: catalogue.startDate,
-      catalogueEndDate:  catalogue.endDate,
+      catalogueEndDate: catalogue.endDate,
       isActive,
     });
 
