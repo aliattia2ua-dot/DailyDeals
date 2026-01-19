@@ -1,9 +1,8 @@
-// app/store/[id].tsx - UPDATED VERSION WITH LOGO FIX
+// app/store/[id].tsx - FIXED: Logo alignment for RTL
 import React from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -79,7 +78,7 @@ export default function StoreDetailScreen() {
     });
   };
 
-  // ✅ FIX: Handle both require() and URI logos (same logic as StoreCard.tsx)
+  // ✅ Handle both require() and URI logos
   const getLogoSource = () => {
     if (typeof store.logo === 'string') {
       return { uri: store.logo };
@@ -123,12 +122,15 @@ export default function StoreDetailScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Store Header */}
         <View style={styles.header}>
-          {/* UPDATED: Uses the getLogoSource helper with CachedImage */}
-          <CachedImage
-            source={getLogoSource()}
-            style={styles.storeLogo}
-            contentFit="contain"
-          />
+          {/* ✅ FIXED: Logo container with proper centering */}
+          <View style={styles.logoContainer}>
+            <CachedImage
+              source={getLogoSource()}
+              style={styles.storeLogo}
+              resizeMode="contain"
+            />
+          </View>
+
           <View style={styles.headerInfo}>
             <Text style={styles.storeName}>{getName(store)}</Text>
             <Text style={styles.branchCount}>
@@ -248,13 +250,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.gray[200],
   },
-  storeLogo: {
+  // ✅ FIXED: Logo container with proper centering
+  logoContainer: {
     width: 80,
     height: 80,
     borderRadius: borderRadius.lg,
     backgroundColor: colors.gray[100],
     marginRight: I18nManager.isRTL ? 0 : spacing.md,
     marginLeft: I18nManager.isRTL ? spacing.md : 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  storeLogo: {
+    width: '100%',
+    height: '100%',
   },
   headerInfo: {
     flex: 1,

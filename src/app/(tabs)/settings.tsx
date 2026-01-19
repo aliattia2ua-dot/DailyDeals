@@ -222,6 +222,14 @@ export default function SettingsScreen() {
                     () => router.push('/cache-debug')
                   )}
 
+
+{renderSettingItem(
+  'speedometer-outline',
+  t('settings.performanceMonitor'),
+  'Track app performance and transitions',
+  undefined,
+  () => router.push('/perf-debug')
+)}
                   <View style={styles.divider} />
 
                   {renderSettingItem(
@@ -271,6 +279,8 @@ export default function SettingsScreen() {
           </View>
         </View>
       </View>
+
+
 
       {/* Shopping Section */}
       <View style={styles.section}>

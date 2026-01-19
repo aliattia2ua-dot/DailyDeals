@@ -1,4 +1,4 @@
-// components/stores/StoreCard.tsx - COMPLETE UPDATED VERSION
+// components/stores/StoreCard.tsx - FIXED: Logo alignment for RTL
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, I18nManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -153,10 +153,8 @@ export const StoreCard: React.FC<StoreCardProps> = ({
   // ✅ Handle both require() and URI logos
   const getLogoSource = () => {
     if (typeof store.logo === 'string') {
-      // It's a URI string
       return { uri: store.logo };
     }
-    // It's a require() import (ImageSourcePropType)
     return store.logo;
   };
 
@@ -169,11 +167,14 @@ export const StoreCard: React.FC<StoreCardProps> = ({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <CachedImage
-        source={getLogoSource()}
-        style={styles.logo}
-        contentFit="contain"
-      />
+      {/* ✅ FIXED: Logo container with proper alignment */}
+      <View style={styles.logoContainer}>
+        <CachedImage
+          source={getLogoSource()}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
 
       <View style={styles.content}>
         <Text style={styles.name}>{getName(store)}</Text>
@@ -250,13 +251,21 @@ const styles = StyleSheet.create({
   containerDisabled: {
     opacity: 0.6,
   },
-  logo: {
+  // ✅ FIXED: Separate container for logo with consistent spacing
+  logoContainer: {
     width: 60,
     height: 60,
     borderRadius: borderRadius.md,
     backgroundColor: colors.gray[100],
     marginRight: I18nManager.isRTL ? 0 : spacing.md,
     marginLeft: I18nManager.isRTL ? spacing.md : 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
   },
   content: {
     flex: 1,

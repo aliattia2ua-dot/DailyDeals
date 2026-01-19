@@ -1,4 +1,4 @@
-// src/components/flyers/OfferCard.tsx - COMPACT LAYOUT WITH FIXED BUTTON POSITION
+// src/components/flyers/OfferCard.tsx - OPTIMIZED WITH IMAGE CACHING
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, I18nManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ interface OfferCardProps {
   onAddToBasket: () => void;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
+  isInBasket?: boolean; // ✅ NEW: Determines cache priority
 }
 
 export const OfferCard: React.FC<OfferCardProps> = ({
@@ -22,6 +23,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({
   onAddToBasket,
   isFavorite = false,
   onToggleFavorite,
+  isInBasket = false, // ✅ NEW
 }) => {
   const { getName, getDescription } = useLocalized();
   const discount = offer.originalPrice
@@ -31,7 +33,13 @@ export const OfferCard: React.FC<OfferCardProps> = ({
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.imageContainer}>
-        <CachedImage source={offer.imageUrl} style={styles.image} contentFit="cover" />
+        <CachedImage
+          source={offer.imageUrl}
+          style={styles.image}
+          contentFit="cover"
+          cachePriority={isInBasket ? 'high' : 'normal'} // ✅ High priority for basket items
+          enableCache={true}
+        />
         {discount > 0 && (
           <View style={styles.discountBadge}>
             <Text style={styles.discountText}>{discount}%</Text>
@@ -49,29 +57,23 @@ export const OfferCard: React.FC<OfferCardProps> = ({
       </View>
 
       <View style={styles.content}>
-        {/* Product Name */}
         <Text style={styles.name} numberOfLines={2}>
           {getName(offer)}
         </Text>
 
-        {/* Description (if available) */}
         {getDescription(offer) && (
           <Text style={styles.description} numberOfLines={1}>
             {getDescription(offer)}
           </Text>
         )}
 
-        {/* Spacer to push prices and button to bottom */}
         <View style={styles.spacer} />
 
-        {/* ✅ Price Section - Compact 2 Rows */}
         <View style={styles.priceSection}>
-          {/* Offer Price Row */}
           <View style={styles.priceRow}>
             <Text style={styles.offerPrice}>{formatCurrency(offer.offerPrice)}</Text>
           </View>
 
-          {/* Original Price Row (if available) */}
           {offer.originalPrice && (
             <View style={styles.originalPriceRow}>
               <Text style={styles.originalPrice}>{formatCurrency(offer.originalPrice)}</Text>
@@ -79,7 +81,6 @@ export const OfferCard: React.FC<OfferCardProps> = ({
           )}
         </View>
 
-        {/* ✅ Add Button - Always at Bottom */}
         <TouchableOpacity style={styles.addButton} onPress={onAddToBasket}>
           <Ionicons name="add" size={20} color={colors.white} />
           <Text style={styles.addButtonText}>أضف للسلة</Text>
@@ -89,6 +90,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({
   );
 };
 
+// Copy all your existing styles from the original OfferCard.tsx
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.white,
@@ -136,7 +138,7 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     display: 'flex',
     flexDirection: 'column',
-    minHeight: 130, // ✅ Fixed minimum height for consistent cards
+    minHeight: 130,
   },
   name: {
     fontSize: typography.fontSize.md,
@@ -152,18 +154,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     textAlign: I18nManager.isRTL ? 'right' : 'left',
   },
-  // ✅ Spacer pushes everything below to the bottom
   spacer: {
     flex: 1,
   },
-  // ✅ NEW: Compact price section with 2 rows
   priceSection: {
     marginBottom: spacing.xs,
   },
   priceRow: {
     flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
     alignItems: 'center',
-    marginBottom: 2, // Small gap between prices
+    marginBottom: 2,
   },
   offerPrice: {
     fontSize: typography.fontSize.lg,
@@ -179,7 +179,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textDecorationLine: 'line-through',
   },
-  // ✅ Button always stays at bottom
   addButton: {
     flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
     alignItems: 'center',
@@ -188,7 +187,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
-    marginTop: spacing.xs, // Small gap above button
+    marginTop: spacing.xs,
   },
   addButtonText: {
     color: colors.white,

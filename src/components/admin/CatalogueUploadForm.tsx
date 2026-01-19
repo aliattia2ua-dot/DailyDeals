@@ -37,6 +37,7 @@ import {
   type GovernorateId,
   type CityId,
 } from '../../data/stores';
+import { compressImage, getOptimalSettings } from '../../services/imageCompressionService';
 
 
 interface CatalogueUploadFormProps {
@@ -442,30 +443,49 @@ export const CatalogueUploadForm: React.FC<CatalogueUploadFormProps> = ({
   };
 
   const handleImagesUpload = async (catalogueId: string, selectedStore: any) => {
-    console.log('🖼️ Processing images upload...');
+  console.log('🖼️ Processing images upload with compression...');
 
+  setProgress({
+    stage: 'جاري ضغط وتحميل الصور...',
+    current: 0,
+    total: selectedImages.length + 1, // +1 for cover
+    percentage: 0,
+  });
+
+  const uploadedPages = [];
+  let coverImageUrl = '';
+
+  // Step 1: Compress and upload all images
+  for (let i = 0; i < selectedImages.length; i++) {
+    const image = selectedImages[i];
+    const pageNumber = i + 1;
+    const isFirstImage = i === 0;
+
+    const percentage = ((i + 1) / (selectedImages.length + 1)) * 90;
     setProgress({
-      stage: 'جاري رفع الصور...',
-      current: 0,
-      total: selectedImages.length,
-      percentage: 0,
+      stage: `${isFirstImage ? 'إنشاء صورة الغلاف و' : ''}ضغط وتحميل الصورة ${pageNumber} من ${selectedImages.length}...`,
+      current: i + 1,
+      total: selectedImages.length + 1,
+      percentage,
     });
 
-    const uploadedPages = [];
+    try {
+      // Compress image based on type
+      const compressionSettings = isFirstImage
+        ? getOptimalSettings('cover')
+        : getOptimalSettings('page');
 
-    for (let i = 0; i < selectedImages.length; i++) {
-      const image = selectedImages[i];
-      const pageNumber = i + 1;
+      console.log(`📦 Compressing image ${pageNumber} with settings:`, compressionSettings);
 
-      const percentage = ((i + 1) / selectedImages.length) * 90;
-      setProgress({
-        stage: `رفع الصورة ${pageNumber} من ${selectedImages.length}...`,
-        current: i + 1,
-        total: selectedImages.length,
-        percentage,
-      });
+      const compressedResult = await compressImage(image.uri, compressionSettings);
 
-      const response = await fetch(image.uri);
+      // Log compression results
+      if (compressedResult.originalSize && compressedResult.compressedSize) {
+        console.log(`✅ Image ${pageNumber} compressed: ${(compressedResult.originalSize / 1024).toFixed(1)}KB → ${(compressedResult.compressedSize / 1024).toFixed(1)}KB (${compressedResult.compressionRatio?.toFixed(1)}% reduction)`);
+      }
+
+      // Upload compressed image
+      const response = await fetch(compressedResult.uri);
       const blob = await response.blob();
 
       const storageRef = ref(
@@ -480,28 +500,48 @@ export const CatalogueUploadForm: React.FC<CatalogueUploadFormProps> = ({
         imageUrl,
       });
 
-      console.log(`Uploaded image ${pageNumber}/${selectedImages.length}`);
+      // If this is the first image, also create the cover image
+      if (isFirstImage) {
+        console.log('📸 Creating cover image from first page...');
+
+        setProgress({
+          stage: 'إنشاء صورة الغلاف...',
+          current: i + 1,
+          total: selectedImages.length + 1,
+          percentage: percentage + 2,
+        });
+
+        const coverRef = ref(storage, `catalogue-covers/${catalogueId}.jpg`);
+        await uploadBytes(coverRef, blob);
+        coverImageUrl = await getDownloadURL(coverRef);
+
+        console.log('✅ Cover image created:', coverImageUrl);
+      }
+
+      console.log(`✅ Uploaded compressed image ${pageNumber}/${selectedImages.length}`);
+    } catch (error) {
+      console.error(`❌ Error processing image ${pageNumber}:`, error);
+      throw new Error(`فشل معالجة الصورة ${pageNumber}`);
     }
+  }
 
-    setProgress({
-      stage: 'جاري إنشاء صورة الغلاف...',
-      current: selectedImages.length,
-      total: selectedImages.length,
-      percentage: 95,
-    });
+  setProgress({
+    stage: 'جاري حفظ البيانات...',
+    current: selectedImages.length + 1,
+    total: selectedImages.length + 1,
+    percentage: 95,
+  });
 
-    const coverImageUrl = uploadedPages[0].imageUrl;
+  console.log('✅ All images compressed and uploaded successfully');
 
-    console.log('✅ Images uploaded');
-
-    await saveCatalogueToFirestore(
-      catalogueId,
-      selectedStore,
-      uploadedPages,
-      null,
-      coverImageUrl
-    );
-  };
+  await saveCatalogueToFirestore(
+    catalogueId,
+    selectedStore,
+    uploadedPages,
+    null,
+    coverImageUrl
+  );
+};
 
   const saveCatalogueToFirestore = async (
   catalogueId: string,

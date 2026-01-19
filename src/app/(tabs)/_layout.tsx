@@ -1,3 +1,4 @@
+// src/app/(tabs)/_layout.tsx - WITH PERFORMANCE MONITOR
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
@@ -11,6 +12,7 @@ import { useAppConfig } from '../../hooks/useAppConfig';
 import { AnnouncementBar } from '../../components/common/AnnouncementBar';
 import { ForceUpdateModal } from '../../components/common/ForceUpdateModal';
 import { AdBanner } from '../../components/common';
+import { PerformanceMonitor } from '../../components/dev/PerformanceMonitor'; // 🔥 NEW
 
 // Badge component for basket count
 const BasketBadge = () => {
@@ -42,9 +44,7 @@ export default function TabsLayout() {
   const [updateModalDismissed, setUpdateModalDismissed] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const MIN_BOTTOM_PADDING = 2; // ✅ Reduced from 4 to 2
-
-  // ✅ Further reduced bottom padding - dividing by 3 instead of 2
+  const MIN_BOTTOM_PADDING = 2;
   const tabBarBottomPadding = insets.bottom > 0 ? insets.bottom / 3 : MIN_BOTTOM_PADDING;
 
   const showUpdateModal =
@@ -164,6 +164,9 @@ export default function TabsLayout() {
         <View style={styles.bottomAdContainer}>
           <AdBanner position="tabs_bottom" maxAds={1} />
         </View>
+
+        {/* 🔥 Performance Monitor - Only in DEV mode */}
+        {__DEV__ && <PerformanceMonitor />}
       </View>
     </>
   );

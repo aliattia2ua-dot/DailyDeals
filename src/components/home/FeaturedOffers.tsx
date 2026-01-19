@@ -1,7 +1,8 @@
-// src/components/home/FeaturedOffers.tsx - WITH UNIFORM PRICE LAYOUT
+// src/components/home/FeaturedOffers.tsx - OPTIMIZED WITH IMAGE CACHING
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, I18nManager } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, I18nManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { CachedImage } from '../common';
 import { colors, spacing, borderRadius, typography, shadows } from '../../constants/theme';
 import { formatCurrency, calculateDiscount } from '../../utils/helpers';
 import type { OfferWithCatalogue } from '../../services/offerService';
@@ -35,7 +36,13 @@ export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({
         activeOpacity={0.7}
       >
         <View style={styles.imageContainer}>
-          <Image source={{ uri: item.imageUrl }} style={styles.image} resizeMode="cover" />
+          <CachedImage
+            source={item.imageUrl}
+            style={styles.image}
+            contentFit="cover"
+            cachePriority="normal" // ✅ Normal priority for browsing
+            enableCache={true}
+          />
 
           {discount > 0 && (
             <View style={styles.discountBadge}>
@@ -59,7 +66,6 @@ export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({
         </View>
 
         <View style={styles.content}>
-          {/* ✅ Name and Add Button Row */}
           <View style={styles.nameRow}>
             <Text style={styles.name} numberOfLines={2}>{item.nameAr}</Text>
             <TouchableOpacity
@@ -70,7 +76,6 @@ export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* ✅ FIXED: Uniform price layout with fixed height */}
           <View style={styles.priceRow}>
             <View style={styles.priceContainer}>
               <Text style={styles.offerPrice}>{formatCurrency(item.offerPrice)}</Text>
@@ -93,10 +98,16 @@ export const FeaturedOffers: React.FC<FeaturedOffersProps> = ({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.listContainer}
       inverted={I18nManager.isRTL}
+      // ✅ Performance optimizations
+      initialNumToRender={3}
+      maxToRenderPerBatch={2}
+      windowSize={5}
+      removeClippedSubviews={true}
     />
   );
 };
 
+// Copy all your existing styles from the original FeaturedOffers.tsx
 const styles = StyleSheet.create({
   listContainer: {
     paddingHorizontal: spacing.md,
@@ -154,26 +165,25 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.xs,
     paddingTop: spacing.sm,
-    minHeight: 75, // ✅ Reduced from 90 for more compact look
+    minHeight: 75,
   },
   nameRow: {
     flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
     alignItems: 'flex-start',
-    marginBottom: 2, // ✅ Further reduced for minimal gap
+    marginBottom: 2,
     gap: spacing.xs,
   },
   name: {
     flex: 1,
-    fontSize: typography.fontSize.md, // ✅ Increased from sm for better readability
+    fontSize: typography.fontSize.md,
     fontWeight: '600',
     color: colors.text,
     textAlign: I18nManager.isRTL ? 'right' : 'left',
-    lineHeight: 17, // ✅ Adjusted to match larger font
+    lineHeight: 17,
   },
-  // ✅ NEW: Price row with fixed height for alignment
   priceRow: {
-    height: 32, // ✅ Reduced from 40 for more compact layout
-    justifyContent: 'flex-end', // Pushes prices to bottom
+    height: 32,
+    justifyContent: 'flex-end',
   },
   priceContainer: {
     flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
