@@ -204,11 +204,6 @@ export default function ProfileScreen() {
                 <Ionicons name="person" size={48} color={colors.textSecondary} />
               </View>
             )}
-            {user.isAdmin && (
-              <View style={styles.adminBadge}>
-                <Ionicons name="shield-checkmark" size={16} color={colors.white} />
-              </View>
-            )}
           </View>
           <Text style={styles.userName}>{user.displayName || 'المستخدم'}</Text>
           <Text style={styles.userEmail}>{user.email}</Text>

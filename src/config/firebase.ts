@@ -20,6 +20,8 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// TODO: Add @react-native-firebase/crashlytics for native migration
+
 // For React Native persistence
 import { getReactNativePersistence } from 'firebase/auth';
 
