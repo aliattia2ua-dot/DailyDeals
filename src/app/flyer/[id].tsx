@@ -33,7 +33,6 @@ import { formatCurrency, calculateDiscount } from '../../utils/helpers';
 import { formatDateRange } from '../../utils/catalogueUtils';
 import { cacheService } from '../../services/cacheService';
 import { logScreenView, logViewItem, logAddToCart } from '../../services/analyticsService';
-import { perfLogger, trackNavigation } from '../../utils/performanceLogger';
 import type { OfferWithCatalogue } from '../../services/offerService';
 import type { Catalogue } from '../../types';
 
@@ -220,7 +219,6 @@ const PerformanceOverlay = ({
   // 🔥 PERFORMANCE: Track renders
   useEffect(() => {
     renderCount.current++;
-    perfLogger.trackRender('FlyerDetail', 3);
     console.log(`📄 [FlyerDetail] Render #${renderCount.current}`);
   });
 
@@ -229,12 +227,8 @@ const PerformanceOverlay = ({
     const transitionStart = Date.now();
     transitionStartRef.current = transitionStart;
 
-    trackNavigation.start('Previous', `FlyerDetail-${id}`);
-
     const mountDuration = Date.now() - mountTime.current;
     console.log(`⏱️ [FlyerDetail] Mounted in ${mountDuration}ms`);
-
-    trackNavigation.markPhase('mount');
 
     setImageLoadMetrics(prev => ({
       ...prev,
@@ -252,7 +246,6 @@ const PerformanceOverlay = ({
       }));
 
       setIsReady(true);
-      trackNavigation.markPhase('firstRender');
     });
 
     return () => {
@@ -263,7 +256,6 @@ const PerformanceOverlay = ({
         totalTime,
       }));
 
-      trackNavigation.end();
       console.log('👋 [FlyerDetail] Unmounted');
     };
   }, []);
@@ -280,7 +272,6 @@ const PerformanceOverlay = ({
 
       try {
         console.log(`🔍 [Offers Check] Checking if catalogue ${catalogue.id} has offers...`);
-        perfLogger.start('FlyerDetail.checkOffers');
 
         const offers = await getOffersByCatalogue(catalogue.id);
 
@@ -301,13 +292,11 @@ const PerformanceOverlay = ({
           console.log(`ℹ️ [Offers Check] No offers found for catalogue`);
         }
 
-        const duration = perfLogger.end('FlyerDetail.checkOffers');
+        const duration = Date.now() - (transitionStartRef.current || Date.now());
         setImageLoadMetrics(prev => ({
           ...prev,
           dataLoadTime: duration || 0,
         }));
-
-        trackNavigation.markPhase('dataLoad');
       } catch (error) {
         console.error('❌ [Offers Check] Error checking offers:', error);
         setOffersCache({
@@ -315,7 +304,6 @@ const PerformanceOverlay = ({
           checkedAt: Date.now(),
           totalOffers: 0,
         });
-        perfLogger.end('FlyerDetail.checkOffers');
       } finally {
         setLoadingOffers(false);
       }
@@ -406,7 +394,6 @@ const PerformanceOverlay = ({
       imageLoadStartTime: imageStartTime,
     }));
 
-    trackNavigation.markPhase('imageLoadStart');
     console.log(`🖼️ [Image] Load started for page ${currentPage + 1} at ${imageStartTime}ms`);
 
     // Preload the image
@@ -421,8 +408,6 @@ const PerformanceOverlay = ({
             ...prev,
             imageLoadEndTime: totalElapsed,
           }));
-
-          trackNavigation.markPhase('imageLoadEnd');
 
           if (loadDuration > 500) {
             console.error(`🔴 [Image] SLOW LOAD: ${loadDuration}ms for page ${currentPage + 1}`);
@@ -455,7 +440,6 @@ const PerformanceOverlay = ({
     }));
 
     setImageLoaded(true);
-    trackNavigation.markPhase('imageRender');
 
     const loadDuration = Date.now() - imageLoadStartRef.current;
     console.log(`🖼️ [Image] Rendered in ${loadDuration}ms (total: ${renderTime}ms)`);
@@ -507,8 +491,6 @@ const PerformanceOverlay = ({
   const nextCatalogue = useMemo(() => {
     if (!catalogue) return null;
 
-    perfLogger.start('FlyerDetail.calculateNextCatalogue');
-
     const cataloguesWithStatus: CatalogueWithStatus[] = catalogues.map(cat => ({
       ...cat,
       status: getCatalogueStatus(cat.startDate, cat.endDate),
@@ -527,18 +509,15 @@ const PerformanceOverlay = ({
 
     const sameStore = activeCatalogues.find(c => c.storeId === catalogue.storeId);
     if (sameStore) {
-      perfLogger.end('FlyerDetail.calculateNextCatalogue');
       return sameStore;
     }
 
     const sameCategory = activeCatalogues.find(c => c.categoryId === catalogue.categoryId);
     if (sameCategory) {
-      perfLogger.end('FlyerDetail.calculateNextCatalogue');
       return sameCategory;
     }
 
     const result = activeCatalogues[0] || null;
-    perfLogger.end('FlyerDetail.calculateNextCatalogue');
     return result;
   }, [catalogue?.id, catalogue?.storeId, catalogue?.categoryId, catalogues, userGovernorate, getCatalogueStatus]);
 
@@ -552,7 +531,6 @@ const PerformanceOverlay = ({
     if (nextCatalogueRef.current) {
       console.log('📄 Navigating to next catalogue:', nextCatalogueRef.current.id);
 
-      trackNavigation.start('FlyerDetail', `FlyerDetail-${nextCatalogueRef.current.id}`);
       setFullScreenImage(false);
 
       setTimeout(() => {
@@ -725,11 +703,9 @@ const PerformanceOverlay = ({
       return [];
     }
 
-    perfLogger.start('FlyerDetail.filterPageOffers');
     const filtered = catalogueOffers.filter(
       offer => offer.pageNumber === currentPage + 1
     );
-    perfLogger.end('FlyerDetail.filterPageOffers');
     return filtered;
   }, [catalogueOffers, currentPage, offersCache]);
 

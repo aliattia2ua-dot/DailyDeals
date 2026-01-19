@@ -1,6 +1,6 @@
 // src/data/catalogueRegistry. ts
 import { Catalogue } from '../types';
-import { getAllCatalogues } from '../services/adminService';
+import { getAllCatalogues } from '../services/catalogueService';
 
 // Cache for catalogues loaded from Firestore
 let cataloguesCache: Catalogue[] = [];

@@ -39,7 +39,7 @@ export default function SettingsScreen() {
   const stores = useAppSelector(state => state.stores.stores);
   const favoriteStoreIds = useAppSelector(state => state.favorites.storeIds);
   const favoriteSubcategoryIds = useAppSelector(state => state.favorites.subcategoryIds);
-  const { user, isAuthenticated, isAdmin } = useAppSelector(state => state.auth);
+  const { user, isAuthenticated } = useAppSelector(state => state.auth);
 
   const handleLanguageChange = async (language: 'ar' | 'en') => {
     await changeLanguage(language);
@@ -125,11 +125,6 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleAdminPanel = () => {
-    console.log('🔵 [Settings] Navigating to admin panel');
-    router.push('/admin/dashboard');
-  };
-
   const handleStores = () => {
     console.log('🏪 [Settings] Navigating to stores');
     router.push('/(tabs)/stores');
@@ -195,12 +190,6 @@ export default function SettingsScreen() {
                 <View style={styles.profileInfo}>
                   <Text style={styles.profileName}>{user.displayName || t('settings.user')}</Text>
                   <Text style={styles.profileEmail}>{user.email}</Text>
-                  {isAdmin && (
-                    <View style={styles.adminBadge}>
-                      <Ionicons name="shield-checkmark" size={14} color={colors.white} />
-                      <Text style={styles.adminBadgeText}>{t('settings.admin')}</Text>
-                    </View>
-                  )}
                 </View>
                 <Ionicons
                   name={I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'}
@@ -208,39 +197,6 @@ export default function SettingsScreen() {
                   color={colors.gray[400]}
                 />
               </TouchableOpacity>
-
-              {/* Admin-only tools */}
-              {isAdmin && (
-                <>
-                  <View style={styles.divider} />
-
-                  {renderSettingItem(
-                    'analytics-outline',
-                    t('settings.cacheMonitor'),
-                    t('settings.cacheMonitorDesc'),
-                    undefined,
-                    () => router.push('/cache-debug')
-                  )}
-
-
-{renderSettingItem(
-  'speedometer-outline',
-  t('settings.performanceMonitor'),
-  'Track app performance and transitions',
-  undefined,
-  () => router.push('/perf-debug')
-)}
-                  <View style={styles.divider} />
-
-                  {renderSettingItem(
-                    'settings',
-                    t('settings.adminPanel'),
-                    t('settings.adminPanelDesc'),
-                    undefined,
-                    handleAdminPanel
-                  )}
-                </>
-              )}
 
               {/* Sign Out Button */}
               {renderSettingItem(
