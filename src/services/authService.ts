@@ -42,7 +42,7 @@ export const signInWithGoogleToken = async (
       throw new Error('No authentication token provided');
     }
 
-    const credential = auth.GoogleAuthProvider.credential(idToken, accessToken);
+    const credential = auth.GoogleAuthProvider.credential(idToken ?? undefined, accessToken ?? undefined);
     const userCredential: UserCredential = await auth().signInWithCredential(credential);
     const user = userCredential.user;
 
@@ -132,7 +132,7 @@ export const getOrCreateUserProfile = async (
           photoURL: user.photoURL,
           isAdmin: shouldBeAdmin,
           phoneNumber: userData?.phoneNumber || null, // ✅ NEW
-          location: location,
+          location: location || undefined,
           createdAt: userData?.createdAt,
           lastLoginAt: firestore.FieldValue.serverTimestamp(),
         };
@@ -146,7 +146,7 @@ export const getOrCreateUserProfile = async (
           photoURL: user.photoURL,
           isAdmin: shouldBeAdmin,
           phoneNumber: null, // ✅ NEW
-          location: null,
+          location: undefined,
           createdAt: firestore.FieldValue.serverTimestamp(),
           lastLoginAt: firestore.FieldValue.serverTimestamp(),
         };
@@ -204,7 +204,7 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
         photoURL: userData?.photoURL,
         isAdmin: shouldBeAdmin,
         phoneNumber: userData?.phoneNumber || null, // ✅ NEW
-        location: location,
+        location: location || undefined,
         createdAt: userData?.createdAt,
         lastLoginAt: userData?.lastLoginAt,
       };

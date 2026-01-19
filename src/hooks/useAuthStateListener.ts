@@ -12,7 +12,9 @@ export const useAuthStateListener = () => {
 
     const unsubscribe = onAuthChange((userProfile) => {
       console.log('🔄 Auth state changed:', userProfile?.email || 'signed out');
-      dispatch(setUser(userProfile));
+      if (userProfile) {
+        dispatch(setUser(userProfile));
+      }
     });
 
     return () => {
