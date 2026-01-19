@@ -173,7 +173,7 @@ export const addCatalogueOffer = async (
     console.log(`✅ Offer added to subcollection with ID: ${docRef.id}`);
 
     // 4. Add to FLAT COLLECTION (for user app queries)
-    const endDate = catalogue. endDate?.toDate
+    const endDate = catalogue.endDate?.toDate && typeof catalogue.endDate.toDate === 'function'
       ? catalogue.endDate.toDate()
       : new Date(catalogue.endDate);
     const isActive = endDate >= new Date();
@@ -311,7 +311,7 @@ export const syncOfferToFlatCollection = async (
     const offer = offerDoc.data();
 
     // Calculate isActive
-    const endDate = catalogue.endDate?.toDate
+    const endDate = catalogue.endDate?.toDate && typeof catalogue.endDate.toDate === 'function'
       ? catalogue.endDate.toDate()
       : new Date(catalogue.endDate);
     const isActive = endDate >= new Date();

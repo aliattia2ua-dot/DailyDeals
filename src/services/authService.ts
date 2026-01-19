@@ -42,7 +42,7 @@ export const signInWithGoogleToken = async (
       throw new Error('No authentication token provided');
     }
 
-    const credential = auth.GoogleAuthProvider.credential(idToken ?? undefined, accessToken ?? undefined);
+    const credential = auth.GoogleAuthProvider.credential(idToken ?? null, accessToken ?? null);
     const userCredential: UserCredential = await auth().signInWithCredential(credential);
     const user = userCredential.user;
 
