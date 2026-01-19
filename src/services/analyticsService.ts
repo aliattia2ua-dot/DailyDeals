@@ -1,55 +1,34 @@
-// src/services/analyticsService.ts - Cross-platform Firebase Analytics
-import { Platform } from 'react-native';
-import { Analytics } from 'firebase/analytics';
+// src/services/analyticsService.ts - React Native Firebase Analytics & Crashlytics
+import analytics from '@react-native-firebase/analytics';
+import crashlytics from '@react-native-firebase/crashlytics';
 
-let webAnalytics: Analytics | null = null;
-let nativeAnalytics:  any = null;
 let isInitialized = false;
 
 /**
- * Initialize analytics based on platform
+ * Initialize analytics
  */
-export const initializeAnalytics = async (analytics: Analytics | null): Promise<void> => {
+export const initializeAnalytics = async (): Promise<void> => {
   if (isInitialized) return;
 
-  if (Platform.OS === 'web') {
-    webAnalytics = analytics;
-    if (webAnalytics) {
-      console.log('✅ [Analytics] Web analytics ready');
-      isInitialized = true;
-    }
-  } else {
-    // Native platforms - try to load @react-native-firebase/analytics
-    try {
-      const rnfAnalytics = require('@react-native-firebase/analytics');
-      nativeAnalytics = rnfAnalytics. default();
-      console.log('✅ [Analytics] Native analytics ready');
-      isInitialized = true;
-    } catch (error) {
-      console.log('📱 [Analytics] Native analytics not available - install @react-native-firebase/analytics and rebuild');
-    }
+  try {
+    await crashlytics().setCrashlyticsCollectionEnabled(true);
+    console.log('✅ [Analytics] React Native Firebase analytics and crashlytics ready');
+    isInitialized = true;
+  } catch (error) {
+    console.warn('⚠️ [Analytics] Failed to initialize:', error);
   }
 };
 
 /**
  * Log screen view
  */
-export const logScreenView = async (screenName: string, screenClass?:  string): Promise<void> => {
+export const logScreenView = async (screenName: string, screenClass?: string): Promise<void> => {
   try {
-    if (Platform.OS === 'web' && webAnalytics) {
-      const { logEvent } = await import('firebase/analytics');
-      logEvent(webAnalytics, 'screen_view', {
-        screen_name: screenName,
-        screen_class:  screenClass || screenName,
-      });
-      console.log(`📊 [Analytics] Screen view:  ${screenName}`);
-    } else if (nativeAnalytics) {
-      await nativeAnalytics.logScreenView({
-        screen_name: screenName,
-        screen_class: screenClass || screenName,
-      });
-      console.log(`📊 [Analytics] Screen view: ${screenName}`);
-    }
+    await analytics().logScreenView({
+      screen_name: screenName,
+      screen_class: screenClass || screenName,
+    });
+    console.log(`📊 [Analytics] Screen view: ${screenName}`);
   } catch (error) {
     console.warn('⚠️ [Analytics] Failed to log screen view:', error);
   }
@@ -60,19 +39,28 @@ export const logScreenView = async (screenName: string, screenClass?:  string): 
  */
 export const logEvent = async (
   eventName: string,
-  params?:  Record<string, any>
+  params?: Record<string, any>
 ): Promise<void> => {
   try {
-    if (Platform.OS === 'web' && webAnalytics) {
-      const { logEvent:  firebaseLogEvent } = await import('firebase/analytics');
-      firebaseLogEvent(webAnalytics, eventName, params);
-      console.log(`📊 [Analytics] Event: ${eventName}`, params);
-    } else if (nativeAnalytics) {
-      await nativeAnalytics. logEvent(eventName, params);
-      console.log(`📊 [Analytics] Event: ${eventName}`, params);
-    }
+    await analytics().logEvent(eventName, params);
+    console.log(`📊 [Analytics] Event: ${eventName}`, params);
   } catch (error) {
     console.warn('⚠️ [Analytics] Failed to log event:', error);
+  }
+};
+
+/**
+ * Log error with Crashlytics
+ */
+export const logError = (error: Error, context?: string): void => {
+  try {
+    if (context) {
+      crashlytics().log(context);
+    }
+    crashlytics().recordError(error);
+    console.log(`🐛 [Crashlytics] Error logged: ${error.message}`);
+  } catch (e) {
+    console.warn('⚠️ [Crashlytics] Failed to log error:', e);
   }
 };
 
@@ -169,18 +157,15 @@ export const logAddToCart = async (
 export const logAddToBasket = logAddToCart;
 
 /**
- * Set user ID for analytics
+ * Set user ID for analytics and crashlytics
  */
 export const setAnalyticsUserId = async (userId: string | null): Promise<void> => {
   try {
-    if (Platform.OS === 'web' && webAnalytics) {
-      const { setUserId } = await import('firebase/analytics');
-      setUserId(webAnalytics, userId);
-      console.log(`📊 [Analytics] User ID set:  ${userId ?  'yes' : 'cleared'}`);
-    } else if (nativeAnalytics) {
-      await nativeAnalytics. setUserId(userId);
-      console.log(`📊 [Analytics] User ID set: ${userId ?  'yes' :  'cleared'}`);
+    await analytics().setUserId(userId);
+    if (userId) {
+      await crashlytics().setUserId(userId);
     }
+    console.log(`📊 [Analytics] User ID set: ${userId ? 'yes' : 'cleared'}`);
   } catch (error) {
     console.warn('⚠️ [Analytics] Failed to set user ID:', error);
   }
@@ -194,14 +179,8 @@ export const setUserProperty = async (
   value: string | null
 ): Promise<void> => {
   try {
-    if (Platform.OS === 'web' && webAnalytics) {
-      const { setUserProperties } = await import('firebase/analytics');
-      setUserProperties(webAnalytics, { [name]: value });
-      console.log(`📊 [Analytics] User property set:  ${name}`);
-    } else if (nativeAnalytics) {
-      await nativeAnalytics.setUserProperty(name, value);
-      console.log(`📊 [Analytics] User property set: ${name}`);
-    }
+    await analytics().setUserProperty(name, value);
+    console.log(`📊 [Analytics] User property set: ${name}`);
   } catch (error) {
     console.warn('⚠️ [Analytics] Failed to set user property:', error);
   }

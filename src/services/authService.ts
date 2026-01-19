@@ -1,15 +1,11 @@
 // src/services/authService.ts - ✅ COMPLETE FILE WITH PHONE NUMBER SUPPORT
-import {
-  signInWithCredential,
-  GoogleAuthProvider,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  User as FirebaseUser,
-  UserCredential,
-} from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { getAuthInstance, getDbInstance } from '../config/firebase';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import { logError } from '../config/firebase';
 import { UserProfile } from '../types';
+
+type FirebaseUser = FirebaseAuthTypes.User;
+type UserCredential = FirebaseAuthTypes.UserCredential;
 
 // ============================================
 // ADMIN CONFIGURATION
@@ -39,8 +35,6 @@ export const signInWithGoogleToken = async (
   accessToken: string | null
 ): Promise<UserProfile | null> => {
   try {
-    const auth = getAuthInstance();
-
     console.log('=== AUTH SERVICE ===');
     console.log('Signing in...');
 
@@ -48,8 +42,8 @@ export const signInWithGoogleToken = async (
       throw new Error('No authentication token provided');
     }
 
-    const credential = GoogleAuthProvider.credential(idToken, accessToken);
-    const userCredential: UserCredential = await signInWithCredential(auth, credential);
+    const credential = auth.GoogleAuthProvider.credential(idToken, accessToken);
+    const userCredential: UserCredential = await auth().signInWithCredential(credential);
     const user = userCredential.user;
 
     console.log('✅ Firebase sign-in successful:', user.email);
@@ -68,17 +62,18 @@ export const signInWithGoogleToken = async (
     return userProfile;
   } catch (error: any) {
     console.error('❌ Error signing in with Google:', error);
+    logError(error, 'signInWithGoogleToken');
     throw error;
   }
 };
 
 export const signOut = async (): Promise<void> => {
   try {
-    const auth = getAuthInstance();
-    await firebaseSignOut(auth);
+    await auth().signOut();
     console.log('✅ User signed out successfully');
   } catch (error) {
     console.error('❌ Error signing out:', error);
+    logError(error as Error, 'signOut');
     throw error;
   }
 };
@@ -96,22 +91,21 @@ export const getOrCreateUserProfile = async (
     try {
       console.log(`📡 Attempt ${attempt}/${maxRetries}: Getting user profile`);
 
-      const db = getDbInstance();
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
+      const userRef = firestore().collection('users').doc(user.uid);
+      const userSnap = await userRef.get();
 
       const shouldBeAdmin = isAdminEmail(user.email);
 
-      if (userSnap.exists()) {
+      if (userSnap.exists) {
         console.log('✅ User profile found');
 
         const userData = userSnap.data();
 
         const updateData: any = {
-          lastLoginAt: serverTimestamp()
+          lastLoginAt: firestore.FieldValue.serverTimestamp()
         };
 
-        if (shouldBeAdmin !== userData.isAdmin) {
+        if (shouldBeAdmin !== userData?.isAdmin) {
           updateData.isAdmin = shouldBeAdmin;
 
           if (shouldBeAdmin) {
@@ -121,10 +115,10 @@ export const getOrCreateUserProfile = async (
           }
         }
 
-        await setDoc(userRef, updateData, { merge: true });
+        await userRef.set(updateData, { merge: true });
 
         // ✅ Safely extract location with null checks
-        const location = userData.location ? {
+        const location = userData?.location ? {
           governorate: userData.location.governorate || null,
           city: userData.location.city || null,
         } : null;
@@ -137,10 +131,10 @@ export const getOrCreateUserProfile = async (
           displayName: user.displayName,
           photoURL: user.photoURL,
           isAdmin: shouldBeAdmin,
-          phoneNumber: userData.phoneNumber || null, // ✅ NEW
+          phoneNumber: userData?.phoneNumber || null, // ✅ NEW
           location: location,
-          createdAt: userData.createdAt,
-          lastLoginAt: serverTimestamp(),
+          createdAt: userData?.createdAt,
+          lastLoginAt: firestore.FieldValue.serverTimestamp(),
         };
       } else {
         console.log('🆕 Creating new user profile');
@@ -153,11 +147,11 @@ export const getOrCreateUserProfile = async (
           isAdmin: shouldBeAdmin,
           phoneNumber: null, // ✅ NEW
           location: null,
-          createdAt: serverTimestamp(),
-          lastLoginAt: serverTimestamp(),
+          createdAt: firestore.FieldValue.serverTimestamp(),
+          lastLoginAt: firestore.FieldValue.serverTimestamp(),
         };
 
-        await setDoc(userRef, newProfile);
+        await userRef.set(newProfile);
 
         if (shouldBeAdmin) {
           console.log('⭐ New admin user created');
@@ -170,6 +164,7 @@ export const getOrCreateUserProfile = async (
     } catch (error: any) {
       lastError = error;
       console.error(`❌ Attempt ${attempt} failed:`, error.message);
+      logError(error, `getOrCreateUserProfile attempt ${attempt}`);
 
       if (attempt < maxRetries) {
         const delay = 1000 * Math.pow(2, attempt - 1);
@@ -187,16 +182,15 @@ export const getOrCreateUserProfile = async (
  */
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
   try {
-    const db = getDbInstance();
-    const userRef = doc(db, 'users', uid);
-    const userSnap = await getDoc(userRef);
+    const userRef = firestore().collection('users').doc(uid);
+    const userSnap = await userRef.get();
 
-    if (userSnap.exists()) {
+    if (userSnap.exists) {
       const userData = userSnap.data();
-      const shouldBeAdmin = isAdminEmail(userData.email);
+      const shouldBeAdmin = isAdminEmail(userData?.email);
 
       // ✅ Safely extract location with null checks
-      const location = userData.location ? {
+      const location = userData?.location ? {
         governorate: userData.location.governorate || null,
         city: userData.location.city || null,
       } : null;
@@ -205,34 +199,34 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 
       return {
         uid,
-        email: userData.email,
-        displayName: userData.displayName,
-        photoURL: userData.photoURL,
+        email: userData?.email,
+        displayName: userData?.displayName,
+        photoURL: userData?.photoURL,
         isAdmin: shouldBeAdmin,
-        phoneNumber: userData.phoneNumber || null, // ✅ NEW
+        phoneNumber: userData?.phoneNumber || null, // ✅ NEW
         location: location,
-        createdAt: userData.createdAt,
-        lastLoginAt: userData.lastLoginAt,
+        createdAt: userData?.createdAt,
+        lastLoginAt: userData?.lastLoginAt,
       };
     }
 
     return null;
   } catch (error) {
     console.error('❌ Error getting user profile:', error);
+    logError(error as Error, 'getUserProfile');
     return null;
   }
 };
 
 export const onAuthChange = (callback: (user: UserProfile | null) => void) => {
-  const auth = getAuthInstance();
-
-  return onAuthStateChanged(auth, async (firebaseUser) => {
+  return auth().onAuthStateChanged(async (firebaseUser) => {
     if (firebaseUser) {
       try {
         const userProfile = await getUserProfile(firebaseUser.uid);
         callback(userProfile);
       } catch (error) {
         console.error('❌ Error in auth change listener:', error);
+        logError(error as Error, 'onAuthChange');
         callback(null);
       }
     } else {
