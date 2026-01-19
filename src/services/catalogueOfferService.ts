@@ -1,20 +1,6 @@
 // src/services/catalogueOfferService.ts
-import {
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  getDocs,
-  getDoc,
-  setDoc,
-  query,
-  where,
-  serverTimestamp,
-  Timestamp
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../config/firebase';
+import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
 import { getCatalogueById } from '../data/catalogueRegistry';
 
 /**
@@ -48,8 +34,8 @@ export interface CatalogueOffer {
     x: number;
     y: number;
   };
-  createdAt:  Timestamp;
-  updatedAt: Timestamp;
+  createdAt:  FirebaseFirestoreTypes.Timestamp;
+  updatedAt: FirebaseFirestoreTypes.Timestamp;
 }
 
 /**
@@ -59,8 +45,7 @@ export const getCatalogueOffers = async (catalogueId:  string): Promise<Catalogu
   try {
     console.log(`🔥 Fetching offers for catalogue:  ${catalogueId}`);
 
-    const offersRef = collection(db, 'catalogues', catalogueId, 'offers');
-    const snapshot = await getDocs(offersRef);
+    const snapshot = await firestore().collection('catalogues').doc(catalogueId).collection('offers').get();
 
     const offers: CatalogueOffer[] = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -83,9 +68,12 @@ export const getPageOffers = async (
   pageNumber: number
 ): Promise<CatalogueOffer[]> => {
   try {
-    const offersRef = collection(db, 'catalogues', catalogueId, 'offers');
-    const q = query(offersRef, where('pageNumber', '==', pageNumber));
-    const snapshot = await getDocs(q);
+    const snapshot = await firestore()
+      .collection('catalogues')
+      .doc(catalogueId)
+      .collection('offers')
+      .where('pageNumber', '==', pageNumber)
+      .get();
 
     return snapshot.docs.map(doc => ({
       id: doc.id,
@@ -115,9 +103,9 @@ export const addCatalogueOffer = async (
 
     if (! catalogue) {
       console.log('⏳ Fetching catalogue data from Firestore.. .');
-      const catalogueDoc = await getDoc(doc(db, 'catalogues', catalogueId));
+      const catalogueDoc = await firestore().collection('catalogues').doc(catalogueId).get();
 
-      if (!catalogueDoc.exists()) {
+      if (!catalogueDoc.exists) {
         // Try to get from local registry and auto-create in Firestore
         console.log('⚠️ Catalogue not in Firestore, checking local registry...');
         const localCatalogue = getCatalogueById(catalogueId);
@@ -145,11 +133,11 @@ export const addCatalogueOffer = async (
           pdfUrl: localCatalogue.pdfUrl || null,
           pageCount: localCatalogue.pages?.length || 0,
           isActive: new Date(localCatalogue.endDate) >= new Date(),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          createdAt: firestore.FieldValue.serverTimestamp(),
+          updatedAt: firestore.FieldValue.serverTimestamp(),
         };
 
-        await setDoc(doc(db, 'catalogues', catalogueId), newCatalogueData);
+        await firestore().collection('catalogues').doc(catalogueId).set(newCatalogueData);
         console.log('✅ Catalogue auto-created in Firestore');
 
         catalogue = newCatalogueData;
@@ -164,16 +152,13 @@ export const addCatalogueOffer = async (
     // 2. Upload image if provided
     let imageUrl = offerData.imageUrl;
     if (imageFile) {
-      const imageRef = ref(
-        storage,
-        `catalogue-offers/${catalogueId}/${Date.now()}_${offerData.nameEn.replace(/\s+/g, '_')}.jpg`
-      );
-      await uploadBytes(imageRef, imageFile);
-      imageUrl = await getDownloadURL(imageRef);
+      const imagePath = `catalogue-offers/${catalogueId}/${Date.now()}_${offerData.nameEn.replace(/\s+/g, '_')}.jpg`;
+      await storage().ref(imagePath).put(imageFile);
+      imageUrl = await storage().ref(imagePath).getDownloadURL();
       console.log('✅ Image uploaded:', imageUrl);
     }
 
-    const now = serverTimestamp();
+    const now = firestore.FieldValue.serverTimestamp();
     const offerWithImage = removeUndefinedFields({
       ...offerData,
       imageUrl,
@@ -183,13 +168,12 @@ export const addCatalogueOffer = async (
     });
 
     // 3. Add to SUBCOLLECTION (for admin management)
-    const subcollectionRef = collection(db, 'catalogues', catalogueId, 'offers');
-    const docRef = await addDoc(subcollectionRef, offerWithImage);
+    const docRef = await firestore().collection('catalogues').doc(catalogueId).collection('offers').add(offerWithImage);
 
     console.log(`✅ Offer added to subcollection with ID: ${docRef.id}`);
 
     // 4. Add to FLAT COLLECTION (for user app queries)
-    const endDate = catalogue. endDate instanceof Timestamp
+    const endDate = catalogue. endDate?.toDate
       ? catalogue.endDate.toDate()
       : new Date(catalogue.endDate);
     const isActive = endDate >= new Date();
@@ -206,7 +190,7 @@ export const addCatalogueOffer = async (
       isActive,
     });
 
-    await setDoc(doc(db, 'offers', docRef.id), flatCollectionData);
+    await firestore().collection('offers').doc(docRef.id).set(flatCollectionData);
 
     console.log('✅ Offer synced to flat collection');
     console.log('✅ Dual write complete');
@@ -233,32 +217,27 @@ export const updateCatalogueOffer = async (
     // 1. Upload new image if provided
     let imageUrl = updates.imageUrl;
     if (imageFile) {
-      const imageRef = ref(
-        storage,
-        `catalogue-offers/${catalogueId}/${Date.now()}_${updates.nameEn || 'offer'}.jpg`
-      );
-      await uploadBytes(imageRef, imageFile);
-      imageUrl = await getDownloadURL(imageRef);
+      const imagePath = `catalogue-offers/${catalogueId}/${Date.now()}_${updates.nameEn || 'offer'}.jpg`;
+      await storage().ref(imagePath).put(imageFile);
+      imageUrl = await storage().ref(imagePath).getDownloadURL();
       console.log('✅ New image uploaded:', imageUrl);
     }
 
     const updateData = removeUndefinedFields({
       ...updates,
       ...(imageUrl && { imageUrl }),
-      updatedAt: serverTimestamp(),
+      updatedAt: firestore.FieldValue.serverTimestamp(),
     });
 
     // 2. Update SUBCOLLECTION
-    const subcollectionRef = doc(db, 'catalogues', catalogueId, 'offers', offerId);
-    await updateDoc(subcollectionRef, updateData);
+    await firestore().collection('catalogues').doc(catalogueId).collection('offers').doc(offerId).update(updateData);
     console.log('✅ Subcollection updated');
 
     // 3. Update FLAT COLLECTION
-    const flatRef = doc(db, 'offers', offerId);
-    const flatDoc = await getDoc(flatRef);
+    const flatDoc = await firestore().collection('offers').doc(offerId).get();
 
-    if (flatDoc.exists()) {
-      await updateDoc(flatRef, updateData);
+    if (flatDoc.exists) {
+      await firestore().collection('offers').doc(offerId).update(updateData);
       console.log('✅ Flat collection updated');
     } else {
       console.warn('⚠️ Offer not found in flat collection, skipping update');
@@ -285,8 +264,7 @@ export const deleteCatalogueOffer = async (
     // 1. Delete image from storage if URL provided
     if (imageUrl && imageUrl.includes('firebase')) {
       try {
-        const imageRef = ref(storage, imageUrl);
-        await deleteObject(imageRef);
+        await storage().refFromURL(imageUrl).delete();
         console.log('✅ Offer image deleted from storage');
       } catch (error) {
         console.warn('⚠️ Could not delete offer image:', error);
@@ -294,13 +272,11 @@ export const deleteCatalogueOffer = async (
     }
 
     // 2. Delete from SUBCOLLECTION
-    const subcollectionRef = doc(db, 'catalogues', catalogueId, 'offers', offerId);
-    await deleteDoc(subcollectionRef);
+    await firestore().collection('catalogues').doc(catalogueId).collection('offers').doc(offerId).delete();
     console.log('✅ Deleted from subcollection');
 
     // 3. Delete from FLAT COLLECTION
-    const flatRef = doc(db, 'offers', offerId);
-    await deleteDoc(flatRef);
+    await firestore().collection('offers').doc(offerId).delete();
     console.log('✅ Deleted from flat collection');
 
     console.log('✅ Dual delete complete');
@@ -321,21 +297,21 @@ export const syncOfferToFlatCollection = async (
     console.log(`🔄 Syncing offer ${offerId} to flat collection`);
 
     // Get catalogue data
-    const catalogueDoc = await getDoc(doc(db, 'catalogues', catalogueId));
-    if (!catalogueDoc.exists()) {
+    const catalogueDoc = await firestore().collection('catalogues').doc(catalogueId).get();
+    if (!catalogueDoc.exists) {
       throw new Error(`Catalogue ${catalogueId} not found`);
     }
     const catalogue = catalogueDoc. data();
 
     // Get offer data from subcollection
-    const offerDoc = await getDoc(doc(db, 'catalogues', catalogueId, 'offers', offerId));
-    if (!offerDoc.exists()) {
+    const offerDoc = await firestore().collection('catalogues').doc(catalogueId).collection('offers').doc(offerId).get();
+    if (!offerDoc.exists) {
       throw new Error(`Offer ${offerId} not found in subcollection`);
     }
     const offer = offerDoc.data();
 
     // Calculate isActive
-    const endDate = catalogue.endDate instanceof Timestamp
+    const endDate = catalogue.endDate?.toDate
       ? catalogue.endDate.toDate()
       : new Date(catalogue.endDate);
     const isActive = endDate >= new Date();
@@ -353,7 +329,7 @@ export const syncOfferToFlatCollection = async (
       isActive,
     });
 
-    await setDoc(doc(db, 'offers', offerId), flatCollectionData);
+    await firestore().collection('offers').doc(offerId).set(flatCollectionData);
 
     console.log('✅ Offer synced to flat collection');
   } catch (error) {
@@ -387,8 +363,7 @@ export const syncAllCatalogueOffers = async (catalogueId: string): Promise<void>
  */
 export const getCatalogueOffersCount = async (catalogueId: string): Promise<number> => {
   try {
-    const offersRef = collection(db, 'catalogues', catalogueId, 'offers');
-    const snapshot = await getDocs(offersRef);
+    const snapshot = await firestore().collection('catalogues').doc(catalogueId).collection('offers').get();
     return snapshot.size;
   } catch (error) {
     console.error('❌ Error getting offers count:', error);
