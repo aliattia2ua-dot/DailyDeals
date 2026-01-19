@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a6fb0a7f-0c9d-4c8a-8ceb-d55f1414c39f" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;aliattia2&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/aliattia02/OfferCatalog&quot;,
+    &quot;accountId&quot;: &quot;569a2023-a65c-405f-b099-46338acc590d&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="36MI6aiMWsuN74tfk9XTpkTRo8O" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/aliat/New/Offer/src/services",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "ts.external.directory.path": "C:\\Users\\aliat\\New\\DailyDeals\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\aliat\New\Offer\src\services" />
+      <recent name="C:\Users\aliat\New\Offer\src\hooks" />
+      <recent name="C:\Users\aliat\New\Offer\src\app" />
+      <recent name="C:\Users\aliat\New\Offer\src\components" />
+      <recent name="C:\Users\aliat\New\Offer\src\utils" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\aliat\New\Offer\src\utils" />
+      <recent name="C:\Users\aliat\New\Offer\src\app" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-PY-251.26094.141" />
+        <option value="bundled-python-sdk-9f8e2b94138c-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.26094.141" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a6fb0a7f-0c9d-4c8a-8ceb-d55f1414c39f" name="Changes" comment="" />
+      <created>1764809841385</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1764809841385</updated>
+      <workItem from="1764809843011" duration="840000" />
+      <workItem from="1766852864974" duration="5952000" />
+      <workItem from="1767388508453" duration="25771000" />
+      <workItem from="1767482714366" duration="432000" />
+      <workItem from="1767483219602" duration="6383000" />
+      <workItem from="1767490037847" duration="3451000" />
+      <workItem from="1767493932665" duration="7617000" />
+      <workItem from="1767538741951" duration="30549000" />
+      <workItem from="1767629825151" duration="23687000" />
+      <workItem from="1767661291868" duration="9110000" />
+      <workItem from="1767701468291" duration="24431000" />
+      <workItem from="1767746869495" duration="312000" />
+      <workItem from="1767754496438" duration="4454000" />
+      <workItem from="1767760246348" duration="1067000" />
+      <workItem from="1767811485676" duration="7910000" />
+      <workItem from="1767838457127" duration="2919000" />
+      <workItem from="1767902947130" duration="14191000" />
+      <workItem from="1768016127038" duration="2731000" />
+      <workItem from="1768019419917" duration="263000" />
+      <workItem from="1768094906972" duration="397000" />
+      <workItem from="1768139035936" duration="18974000" />
+      <workItem from="1768185248792" duration="4566000" />
+      <workItem from="1768262233596" duration="22549000" />
+      <workItem from="1768309552436" duration="22718000" />
+      <workItem from="1768377515536" duration="30938000" />
+      <workItem from="1768444331125" duration="7253000" />
+      <workItem from="1768461158344" duration="11296000" />
+      <workItem from="1768486753693" duration="3416000" />
+      <workItem from="1768500588733" duration="2103000" />
+      <workItem from="1768543791960" duration="20757000" />
+      <workItem from="1768648855080" duration="28101000" />
+      <workItem from="1768759457741" duration="13495000" />
+      <workItem from="1768789224339" duration="637000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="f0368a4e-851b-4243-9932-3af5d83444b7" value="TOOL_WINDOW" />
+      </map>
+    </option>
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+        <entry key="f0368a4e-851b-4243-9932-3af5d83444b7">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
