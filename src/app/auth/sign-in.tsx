@@ -18,14 +18,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-import {
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile
-} from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import Constants from 'expo-constants';
 
 import { colors, spacing, typography, borderRadius, shadows } from '../../constants/theme';
@@ -33,7 +27,6 @@ import LocationSelector from '../../components/common/LocationSelector';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { signInWithGoogle, setUser } from '../../store/slices/authSlice';
 import { hydrateLocation, syncLocation } from '../../store/slices/settingsSlice';
-import { getAuthInstance, getDbInstance } from '../../config/firebase';
 import { getOrCreateUserProfile, getUserProfile } from '../../services/authService';
 import { syncLocationToFirestore } from '../../services/userDataService';
 
@@ -136,8 +129,7 @@ export default function SignInScreen() {
   const handleLocationSetupComplete = async (savedLocation: { governorate: string; city: string | null; phoneNumber?:  string | null }) => {
     console.log('✅ Location setup completed with:', savedLocation);
 
-    const auth = getAuthInstance();
-    const currentUser = auth.currentUser;
+    const currentUser = auth().currentUser;
 
     // CRITICAL FIX: Sync to Firestore FIRST
     if (currentUser) {
@@ -192,8 +184,7 @@ export default function SignInScreen() {
     console.log('⏭ Location setup skipped');
 
     // Even when skipping, we should mark that we've completed the setup
-    const auth = getAuthInstance();
-    const currentUser = auth.currentUser;
+    const currentUser = auth().currentUser;
 
     // Optionally set a default or null location in Firestore
     if (currentUser) {
@@ -249,13 +240,12 @@ export default function SignInScreen() {
 
     try {
       setIsSigningIn(true);
-      const auth = getAuthInstance();
 
       console.log('🔧 Attempting email sign-in.. .');
 
       try {
         // Try to sign in
-        const userCredential = await signInWithEmailAndPassword(auth, email. trim(), password);
+        const userCredential = await auth().signInWithEmailAndPassword(email. trim(), password);
         console.log('✅ Sign-in successful:', userCredential.user. email);
 
         // Wait for user profile to be created/retrieved
@@ -293,11 +283,11 @@ export default function SignInScreen() {
           setCreatingAccount(true);
 
           // Create new account
-          const newUserCredential = await createUserWithEmailAndPassword(auth, email. trim(), password);
+          const newUserCredential = await auth().createUserWithEmailAndPassword(email. trim(), password);
           console.log('✅ Account created:', newUserCredential.user.email);
 
           // Update display name
-          await updateProfile(newUserCredential.user, {
+          await newUserCredential.user.updateProfile({
             displayName:  email.split('@')[0],
           });
 
@@ -375,87 +365,14 @@ export default function SignInScreen() {
   };
 
   const handleWebGoogleSignIn = async () => {
-    try {
-      setIsSigningIn(true);
-      console.log('🌐 Starting Web Google Sign-In...');
-
-      const auth = getAuthInstance();
-      const provider = new GoogleAuthProvider();
-
-      const result = await signInWithPopup(auth, provider);
-      console.log('✅ Web sign-in successful:', result.user.email);
-
-      // FIX: Check if user document exists in Firestore to determine if new user
-      const db = getDbInstance();
-      const userRef = doc(db, 'users', result.user.uid);
-      const userSnap = await getDoc(userRef);
-      const isNewUser = ! userSnap.exists();
-
-      console.log('🔍 User status:', isNewUser ?  'NEW USER' : 'EXISTING USER');
-
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const idToken = credential?. idToken || null;
-      const accessToken = credential?.accessToken || null;
-
-      // Set flag to prevent redirect during account creation
-      if (isNewUser) {
-        setCreatingAccount(true);
-      }
-
-      const userProfile = await dispatch(signInWithGoogle({
-        idToken,
-        accessToken,
-      })).unwrap();
-
-      console.log('✅ Sign-in successful');
-      setIsSigningIn(false);
-
-      if (isNewUser) {
-        console.log('🆕 New user detected - showing location setup');
-
-        // Show success message for new user
-        if (Platform.OS === 'web') {
-          alert('تم التسجيل بنجاح\nRegistration Successful');
-        } else {
-          Alert.alert(
-            'تم التسجيل بنجاح',
-            'Registration Successful',
-            [{ text: t('settings.ok') }]
-          );
-        }
-
-        setIsFirstTimeUser(true);
-        setLocationSaved(false);
-        showLocationSetup();
-      } else {
-        console.log('👤 Existing user - no location setup needed');
-
-        // FIXED: Location is already restored in signInWithGoogle thunk
-        // Just show welcome message
-        if (Platform.OS === 'web') {
-          alert('مرحباً بعودتك\nWelcome Back');
-        } else {
-          Alert.alert(
-            'مرحباً بعودتك',
-            'Welcome Back',
-            [{ text: t('settings.ok') }]
-          );
-        }
-      }
-    } catch (error: any) {
-      console.error('❌ Error in web Google sign-in:', error);
-      setIsSigningIn(false);
-
-      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-        return;
-      }
-
-      Alert.alert(
-        t('common.error'),
-        t('common.error'),
-        [{ text: t('settings. ok') }]
-      );
-    }
+    // Note: signInWithPopup is web-only and not available in React Native Firebase
+    // For web platform, you would need to handle this differently or use a web-specific Firebase setup
+    console.error('❌ Web Google Sign-In is not supported with React Native Firebase');
+    Alert.alert(
+      t('common.error'),
+      'Web Google Sign-In is not supported with React Native Firebase',
+      [{ text: t('settings.ok') }]
+    );
   };
 
   const handleNativeGoogleSignIn = async () => {
@@ -479,18 +396,15 @@ export default function SignInScreen() {
       const tokens = await GoogleSignin.getTokens();
 
       // FIX: Check if user document exists in Firestore
-      const auth = getAuthInstance();
-      const db = getDbInstance();
-
       // Get the current user after sign-in
       await new Promise(resolve => setTimeout(resolve, 500)); // Wait for auth state
-      const currentUser = auth.currentUser;
+      const currentUser = auth().currentUser;
 
       let isNewUser = false;
       if (currentUser) {
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        isNewUser = !userSnap.exists();
+        const userRef = firestore().collection('users').doc(currentUser.uid);
+        const userSnap = await userRef.get();
+        isNewUser = !userSnap.exists;
         console.log('🔍 User status:', isNewUser ?  'NEW USER' : 'EXISTING USER');
       }
 
