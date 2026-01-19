@@ -1,6 +1,5 @@
 // src/services/appConfigService.ts
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import firestore from '@react-native-firebase/firestore';
 import { AppConfig, DEFAULT_APP_CONFIG } from '../types/appConfig';
 
 const APP_CONFIG_DOC = 'config/app';
@@ -10,10 +9,10 @@ const APP_CONFIG_DOC = 'config/app';
  */
 export const fetchAppConfig = async (): Promise<AppConfig> => {
   try {
-    const docRef = doc(db, APP_CONFIG_DOC);
-    const docSnap = await getDoc(docRef);
+    const docRef = firestore().doc(APP_CONFIG_DOC);
+    const docSnap = await docRef.get();
 
-    if (docSnap.exists()) {
+    if (docSnap.exists) {
       console.log('✅ [AppConfig] Fetched from Firestore');
       return { ...DEFAULT_APP_CONFIG, ...docSnap.data() } as AppConfig;
     }
@@ -34,12 +33,11 @@ export const subscribeToAppConfig = (
   onError?: (error: Error) => void
 ): (() => void) => {
   try {
-    const docRef = doc(db, APP_CONFIG_DOC);
+    const docRef = firestore().doc(APP_CONFIG_DOC);
 
-    const unsubscribe = onSnapshot(
-      docRef,
+    const unsubscribe = docRef.onSnapshot(
       (docSnap) => {
-        if (docSnap.exists()) {
+        if (docSnap.exists) {
           console.log('🔄 [AppConfig] Real-time update received');
           const config = { ...DEFAULT_APP_CONFIG, ...docSnap.data() } as AppConfig;
           onUpdate(config);
