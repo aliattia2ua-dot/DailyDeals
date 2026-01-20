@@ -5,8 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a6fb0a7f-0c9d-4c8a-8ceb-d55f1414c39f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/store/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/store/[id].tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config/firebase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/firebase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/analyticsService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/analyticsService.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -141,7 +147,7 @@
       <workItem from="1768759457741" duration="13495000" />
       <workItem from="1768789224339" duration="985000" />
       <workItem from="1768792175718" duration="1966000" />
-      <workItem from="1768816661399" duration="4534000" />
+      <workItem from="1768816661399" duration="13076000" />
     </task>
     <servers />
   </component>

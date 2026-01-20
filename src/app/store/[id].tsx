@@ -1,5 +1,5 @@
-// app/store/[id].tsx - FIXED: Logo alignment for RTL
-import React from 'react';
+// app/store/[id].tsx - FIXED: Logo alignment for RTL + Default Export
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,6 @@ import {
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect } from 'react';
 
 import { colors, spacing, typography, borderRadius, shadows } from '../../constants/theme';
 import { Button, CachedImage } from '../../components/common';
@@ -24,7 +23,7 @@ import { toggleFavoriteStore } from '../../store/slices/favoritesSlice';
 import { getStoreById, getBranchesByStore } from '../../data/stores';
 import { logScreenView, logSelectContent } from '../../services/analyticsService';
 
-export default function StoreDetailScreen() {
+function StoreDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const router = useRouter();
@@ -58,7 +57,7 @@ export default function StoreDetailScreen() {
   };
 
   const handleViewCatalogues = () => {
-    logSelectContent('store_catalogues', store.id, { store_name: getName(store) });
+    logSelectContent('store_catalogues', store.id);
     router.push({
       pathname: '/(tabs)/flyers',
       params: { storeId: store.id }
@@ -222,6 +221,9 @@ export default function StoreDetailScreen() {
     </>
   );
 }
+
+// ✅ FIXED: Add default export
+export default StoreDetailScreen;
 
 const styles = StyleSheet.create({
   container: {

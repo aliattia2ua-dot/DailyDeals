@@ -6,7 +6,6 @@ import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { initializeAnalytics } from '../services/analyticsService';
-import crashlytics from '@react-native-firebase/crashlytics';
 
 import store from '../store';
 import { initI18n } from '../i18n';
@@ -23,56 +22,45 @@ export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
 
-  useEffect(() => {
+    useEffect(() => {
     const prepare = async () => {
       try {
         console.log('🚀 Starting app initialization...');
 
-        // Initialize i18n
         await initI18n();
         console.log('✅ i18n initialized');
 
-        // Initialize Firebase (now async with persistence)
         await initializeFirebase();
         console.log('✅ Firebase initialized with persistence');
 
-        // Initialize Crashlytics
-        await crashlytics().setCrashlyticsCollectionEnabled(true);
-        console.log('✅ Crashlytics initialized');
+        // COMMENT OUT FOR NOW - Add back after Firebase Console setup:
+        // await crashlytics().setCrashlyticsCollectionEnabled(true);
+        // console. log('✅ Crashlytics initialized');
 
-        // Initialize Analytics
         await initializeAnalytics();
         console.log('✅ Analytics initialized');
 
-        // ✅ CRITICAL: Check if user is already logged in
         console.log('🔍 Checking for existing auth session...');
         await store.dispatch(checkAuthState()).unwrap();
         console.log('✅ Auth state check complete');
 
-        // Clean up expired cache entries on startup
         const cleaned = await cacheService.cleanup();
         if (cleaned > 0) {
           console.log(`🧹 Cleaned ${cleaned} expired cache entries on startup`);
         }
 
-        // ✅ FIX: Debounce auth changes to prevent race conditions during sign-up
-        let authChangeTimeout: NodeJS.Timeout | null = null;
-        let lastAuthState: any = null;
+        let authChangeTimeout: NodeJS. Timeout | null = null;
+        let lastAuthState:  any = null;
 
-        // Listen to auth state changes (for future changes)
         const unsubscribe = onAuthChange((user) => {
-          console.log('🔄 Auth state changed:', user ? user.email : 'Not logged in');
+          console.log('🔄 Auth state changed:', user ?  user.email : 'Not logged in');
 
-          // Clear any pending timeout
           if (authChangeTimeout) {
             clearTimeout(authChangeTimeout);
           }
 
-          // ✅ Debounce: Wait 500ms before processing auth change
-          // This prevents the temporary "not logged in" state during account creation
           authChangeTimeout = setTimeout(() => {
-            // Only process if state actually changed
-            const currentState = user ? user.uid : null;
+            const currentState = user ? user.uid :  null;
             if (currentState === lastAuthState) {
               console.log('⏭️ Auth state unchanged, skipping');
               return;
@@ -82,25 +70,22 @@ export default function RootLayout() {
 
             if (user) {
               console.log('✅ User authenticated, updating store');
-              store.dispatch(setUser(user));
+              store. dispatch(setUser(user));
             } else {
-              // ✅ Only clear if we're sure the user signed out
-              // Check Redux state to see if we're in the middle of sign-up
               const state = store.getState();
               const isSigningIn = state.auth.loading;
 
-              if (!isSigningIn) {
-                console.log('🗑️ User signed out, clearing store');
+              if (! isSigningIn) {
+                console. log('🗑️ User signed out, clearing store');
                 store.dispatch(clearUser());
                 cacheService.clearUserCaches();
               } else {
                 console.log('⏸️ Sign-in in progress, ignoring temporary auth state');
               }
             }
-          }, 500); // 500ms debounce
+          }, 500);
         });
 
-        // Start background sync service
         console.log('🚀 Starting background sync service...');
         startBackgroundSync();
         console.log('✅ Background sync service started');
@@ -108,7 +93,6 @@ export default function RootLayout() {
         setIsReady(true);
         console.log('✅ App initialization complete');
 
-        // Cleanup
         return () => {
           console.log('🛑 Cleaning up...');
           if (authChangeTimeout) {
@@ -117,10 +101,10 @@ export default function RootLayout() {
           unsubscribe();
           stopBackgroundSync();
         };
-      } catch (error: any) {
+      } catch (error:  any) {
         console.error('❌ Error initializing app:', error);
         setInitError(error.message || 'Failed to initialize app');
-        setIsReady(true); // Still show the app
+        setIsReady(true);
       }
     };
 

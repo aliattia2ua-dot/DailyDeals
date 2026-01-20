@@ -1,6 +1,5 @@
-// src/services/analyticsService.ts - React Native Firebase Analytics & Crashlytics
+// src/services/analyticsService.ts - React Native Firebase Analytics (Crashlytics Removed)
 import analytics from '@react-native-firebase/analytics';
-import crashlytics from '@react-native-firebase/crashlytics';
 
 let isInitialized = false;
 
@@ -11,8 +10,9 @@ export const initializeAnalytics = async (): Promise<void> => {
   if (isInitialized) return;
 
   try {
-    await crashlytics().setCrashlyticsCollectionEnabled(true);
-    console.log('✅ [Analytics] React Native Firebase analytics and crashlytics ready');
+    // Just initialize analytics, no crashlytics
+    await analytics().setAnalyticsCollectionEnabled(true);
+    console.log('✅ [Analytics] React Native Firebase analytics ready');
     isInitialized = true;
   } catch (error) {
     console.warn('⚠️ [Analytics] Failed to initialize:', error);
@@ -50,17 +50,21 @@ export const logEvent = async (
 };
 
 /**
- * Log error with Crashlytics
+ * Log error (console only, no crashlytics)
  */
 export const logError = (error: Error, context?: string): void => {
   try {
-    if (context) {
-      crashlytics().log(context);
-    }
-    crashlytics().recordError(error);
-    console.log(`🐛 [Crashlytics] Error logged: ${error.message}`);
+    const errorMessage = context ? `${context}: ${error.message}` : error.message;
+    console.error(`🐛 [Error] ${errorMessage}`, error);
+
+    // Optionally log to analytics as a custom event
+    analytics().logEvent('app_error', {
+      error_message: error.message,
+      error_context: context || 'unknown',
+      error_stack: error.stack?.substring(0, 100), // Limited stack trace
+    }).catch(e => console.warn('⚠️ [Analytics] Failed to log error event:', e));
   } catch (e) {
-    console.warn('⚠️ [Crashlytics] Failed to log error:', e);
+    console.warn('⚠️ [Error] Failed to log error:', e);
   }
 };
 
@@ -73,7 +77,7 @@ export const logSelectContent = async (
 ): Promise<void> => {
   await logEvent('select_content', {
     content_type: contentType,
-    item_id:  itemId,
+    item_id: itemId,
   });
 };
 
@@ -92,14 +96,14 @@ export const logSearch = async (searchTerm: string): Promise<void> => {
 export const logViewItem = async (
   itemId: string,
   itemName: string,
-  itemCategory?:  string,
+  itemCategory?: string,
   additionalParams?: Record<string, any>
 ): Promise<void> => {
   await logEvent('view_item', {
     item_id: itemId,
     item_name: itemName,
-    item_category:  itemCategory,
-    ... additionalParams,
+    item_category: itemCategory,
+    ...additionalParams,
   });
 };
 
@@ -107,14 +111,14 @@ export const logViewItem = async (
  * Log catalogue view
  */
 export const logCatalogueView = async (
-  catalogueId:  string,
+  catalogueId: string,
   catalogueName: string,
-  storeId:  string
+  storeId: string
 ): Promise<void> => {
   await logEvent('view_catalogue', {
-    catalogue_id:  catalogueId,
-    catalogue_name:  catalogueName,
-    store_id:  storeId,
+    catalogue_id: catalogueId,
+    catalogue_name: catalogueName,
+    store_id: storeId,
   });
 };
 
@@ -144,7 +148,7 @@ export const logAddToCart = async (
 ): Promise<void> => {
   await logEvent('add_to_cart', {
     item_id: itemId,
-    item_name:  itemName,
+    item_name: itemName,
     price: price,
     currency: 'EGP',
     ...additionalParams,
@@ -157,14 +161,11 @@ export const logAddToCart = async (
 export const logAddToBasket = logAddToCart;
 
 /**
- * Set user ID for analytics and crashlytics
+ * Set user ID for analytics
  */
 export const setAnalyticsUserId = async (userId: string | null): Promise<void> => {
   try {
     await analytics().setUserId(userId);
-    if (userId) {
-      await crashlytics().setUserId(userId);
-    }
     console.log(`📊 [Analytics] User ID set: ${userId ? 'yes' : 'cleared'}`);
   } catch (error) {
     console.warn('⚠️ [Analytics] Failed to set user ID:', error);
@@ -198,6 +199,7 @@ export const analyticsService = {
   initialize: initializeAnalytics,
   logScreenView,
   logEvent,
+  logError,
   logSelectContent,
   logSearch,
   logViewItem,
@@ -205,7 +207,7 @@ export const analyticsService = {
   logOfferView,
   logAddToCart,
   logAddToBasket,
-  setUserId:  setAnalyticsUserId,
+  setUserId: setAnalyticsUserId,
   setUserProperty,
   setUserGovernorate,
 };
